@@ -1,9 +1,14 @@
 -- ============================================================
---  WindUI + Honcho变形插件
+--  Honcho变形插件 (WasUIPro版)
 --  插件作者MorthenHubber
---  UI 库: WindUI (Footagesus)
+--  UI 库: WasUIPro (WasKKal)
 -- ============================================================
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local WasUIPro = loadstring(game:HttpGet("https://github.com/WasKKal/WasUI-For-Roblox/raw/refs/heads/main/WasUIPro.lua"))()
+
+WasUIPro:SetDefaultTheme("Dark")
+WasUIPro:SetDefaultRainbowMode("流动")
+WasUIPro:SetLanguage("中文")
+
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "提示",
     Text = "已启动脚本",
@@ -42,17 +47,41 @@ local footstepsSound
 local currentAmbience, movementEnabled
 local runTrack, idleTrack, landingTrack, lastMoveState
 
-local Window = WindUI:CreateWindow({
+-- 关键：初始化标记，避开 ConfigKey 加载/保存时触发提示
+local uiReady = false
+
+-- 只在未变形时提示的辅助函数
+local function notifyIfNotMorphed(text)
+    if not morph then
+        WasUIPro:Notify({ Title = "提示", Content = text, Duration = 1 })
+    end
+end
+
+local Window = WasUIPro:CreateWindow({
     Title = "Honcho变形插件控制面板",
-    Author = "tyuioe958制作_UI库:Windui_插件作者MorthenHubber",
-    Icon = "user",
+    WelcomeText = "tyuioe958制作_UI库:WasUIPro_插件作者MorthenHubber",
+    MinimizedText = "Honcho变形",
     Theme = "Dark",
-    Size = UDim2.fromOffset(520, 420),
+    RainbowMode = "流动",
+    DialogTitle = "确认关闭窗口",
+    GroupText = "加入交流群",
+    GroupCopy = "123456789",
+    SnowEnabled = true,
+    Folder = "HonchoMorph_Config",
+    TitleTag = {
+        { text = "Morph", backgroundColor = Color3.fromRGB(0,152,211), textColor = Color3.fromRGB(255,255,255) },
+        { text = "NEW", backgroundColor = Color3.fromRGB(255,80,80), textColor = Color3.fromRGB(255,255,255) }
+    },
+    FeatureNameColor = {Color3.fromRGB(255, 100, 200), Color3.fromRGB(255, 150, 50)}
 })
 
-local MainTab = Window:Tab({ Title = "变形", Icon = "person-standing" })
-local CameraTab = Window:Tab({ Title = "相机", Icon = "camera" })
-local SoundTab = Window:Tab({ Title = "音效", Icon = "volume-2" })
+local MainTab = Window:Tab({ Title = "变形" })
+local CameraTab = Window:Tab({ Title = "相机" })
+local SoundTab = Window:Tab({ Title = "音效" })
+
+local MainCategory = MainTab:Category({ Title = "变形控制", IconName = "person-standing" })
+local CameraCategory = CameraTab:Category({ Title = "相机设置", IconName = "camera" })
+local SoundCategory = SoundTab:Category({ Title = "音乐播放", IconName = "volume-2" })
 
 local function loadModel()
     local objects = game:GetObjects("rbxassetid://" .. modelId)
@@ -366,126 +395,91 @@ end
 if _G.morphCleanup then pcall(_G.morphCleanup) end
 _G.morphCleanup = stopMorph
 
-MainTab:Button({
-    Title = "开始变形",
-    Desc = "加载模型并进入变形状态",
+MainCategory:Button({
+    Text = "开始变形",
+    Icon = "play",
+    Tooltip = "加载模型并进入变形状态",
     Callback = function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "提示",
-    Text = "已开始变形可以去用其他功能了🤑",
-    Duration = 1
-})
+        WasUIPro:Notify({ Title = "提示", Content = "已开始变形可以去用其他功能了🤑", Duration = 1 })
         startMorph()
     end,
 })
 
-MainTab:Button({
-    Title = "停止变形",
-    Desc = "还原角色、相机与音效",
+MainCategory:Button({
+    Text = "停止变形",
+    Icon = "square",
+    Tooltip = "还原角色、相机与音效",
     Callback = function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "提示",
-    Text = "开启变形如果你已开启变形可无视",
-    Duration = 1
-})
+        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
         stopMorph()
     end,
 })
 
-MainTab:Button({
-    Title = "触发落地动作电脑按键(B)",
-    Desc = "播放落地动画与音效",
+MainCategory:Button({
+    Text = "触发落地动作 (电脑按键B)",
+    Icon = "arrow-down",
+    Tooltip = "播放落地动画与音效",
     Callback = function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "提示",
-    Text = "开启变形如果你已开启变形可无视",
-    Duration = 1
-})
+        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
         if _G._morphReplayLanding then
             _G._morphReplayLanding()
         end
     end,
 })
 
-CameraTab:Toggle({
-    Title = "第三人称电脑按键(L)",
-    Desc = "切换第一/第三人称视角",
-    Default = false,
+CameraCategory:Toggle({
+    Title = "第三人称 (电脑按键L)",
+    Value = false,
+    FeatureName = "已开启第三人称",
+    Icon = "camera",
+    Tooltip = "切换第一/第三人称视角",
+    ConfigKey = "third_person",
     Callback = function(state)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "提示",
-    Text = "开启变形如果你已开启变形可无视",
-    Duration = 1
-})
+        if not uiReady then
+            isThirdPerson = state
+            return
+        end
+        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
         isThirdPerson = state
     end,
 })
 
-SoundTab:Button({
-    Title = "播放/停止 档案馆Honcho遭遇战音乐1电脑按键(Z)",
-    Desc = "免费音乐🤔(可能需要开启变形)",
+SoundCategory:Button({
+    Text = "播放/停止 档案馆Honcho遭遇战音乐1 (电脑按键Z)",
+    Icon = "music",
+    Tooltip = "免费音乐🤔(可能需要开启变形)",
     Callback = function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "提示",
-    Text = "开启变形如果你已开启变形可无视",
-    Duration = 1
-})
-        if not ambienceSounds[1] then return end
-        if currentAmbience == ambienceSounds[1] then
-            ambienceSounds[1]:Stop()
-            currentAmbience = nil
-        else
-            if currentAmbience then currentAmbience:Stop() end
-            playSound(ambienceSounds[1])
-            currentAmbience = ambienceSounds[1]
+if not morph then
+            WasUIPro:Notify({ Title = "提示", Content = "开启变形如果你已开启变形可无视", Duration = 1 })
         end
     end,
 })
 
-SoundTab:Button({
-    Title = "播放/停止 档案馆Honcho遭遇战音乐2电脑按键(X)",
-    Desc = "免费音乐🤔(可能需要开启变形)",
+SoundCategory:Button({
+    Text = "播放/停止 档案馆Honcho遭遇战音乐2 (电脑按键X)",
+    Icon = "music",
+    Tooltip = "免费音乐🤔(可能需要开启变形)",
     Callback = function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "提示",
-    Text = "开启变形如果你已开启变形可无视",
-    Duration = 1
-})
-        if not ambienceSounds[2] then return end
-        if currentAmbience == ambienceSounds[2] then
-            ambienceSounds[2]:Stop()
-            currentAmbience = nil
-        else
-            if currentAmbience then currentAmbience:Stop() end
-            playSound(ambienceSounds[2])
-            currentAmbience = ambienceSounds[2]
+if not morph then
+            WasUIPro:Notify({ Title = "提示", Content = "开启变形如果你已开启变形可无视", Duration = 1 })
         end
     end,
 })
 
-SoundTab:Button({
-    Title = "播放/停止 档案馆Honcho遭遇战音乐3电脑按键(V)",
-    Desc = "免费音乐🤔(可能需要开启变形)",
+SoundCategory:Button({
+    Text = "播放/停止 档案馆Honcho遭遇战音乐3 (电脑按键V)",
+    Icon = "music",
+    Tooltip = "免费音乐🤔(可能需要开启变形)",
     Callback = function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "提示",
-    Text = "开启变形如果你已开启变形可无视",
-    Duration = 1
-})
-        if not ambienceSounds[3] then return end
-        if currentAmbience == ambienceSounds[3] then
-            ambienceSounds[3]:Stop()
-            currentAmbience = nil
-        else
-            if currentAmbience then currentAmbience:Stop() end
-            playSound(ambienceSounds[3])
-            currentAmbience = ambienceSounds[3]
+        if not morph then
+            WasUIPro:Notify({ Title = "提示", Content = "开启变形如果你已开启变形可无视", Duration = 1 })
         end
     end,
 })
 
-Window:Notify({
-    Title = "信用",
-    Content = "由 MorthenHubber 制作，UI 由 WindUI 驱动",
-    Duration = 6,
-})
+task.spawn(function()
+    task.wait(1)
+    uiReady = true
+end)
+
+WasUIPro:Notify({ Title = "信用", Content = "由tyuioe958制作_UI库:WasUIPro_插件作者MorthenHubber", Duration = 6 })
