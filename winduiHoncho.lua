@@ -47,7 +47,6 @@ local footstepsSound
 local currentAmbience, movementEnabled
 local runTrack, idleTrack, landingTrack, lastMoveState
 
--- 只在未变形时提示的辅助函数
 local function notifyIfNotMorphed(text)
     if not morph then
         WasUIPro:Notify({ Title = "提示", Content = text, Duration = 1 })
@@ -61,8 +60,8 @@ local Window = WasUIPro:CreateWindow({
     Theme = "Dark",
     RainbowMode = "流动",
     DialogTitle = "确认关闭窗口",
-    GroupText = "加入交流群",
-    GroupCopy = "123456789",
+    GroupText = "加入交流群(ui作者群)",
+    GroupCopy = "938419587",
     SnowEnabled = true,
     Folder = "HonchoMorph_Config",
     TitleTag = {
@@ -368,13 +367,32 @@ local function stopMorph()
     if inputConnection then inputConnection:Disconnect() inputConnection = nil end
     if enforceLoop then enforceLoop:Disconnect() enforceLoop = nil end
     if movementLoop then movementLoop:Disconnect() movementLoop = nil end
-    if currentAmbience then currentAmbience:Stop() end
+
+    if currentAmbience then currentAmbience:Stop() currentAmbience = nil end
     if landingTrack then landingTrack:Stop() end
     if runTrack then runTrack:Stop() end
     if idleTrack then idleTrack:Stop() end
     if footstepsSound then footstepsSound:Stop() end
 
+    for _, sound in ipairs(ambienceSounds) do
+        if sound then sound:Stop() end
+    end
+
+    idleAnimation = nil
+    runAnimation = nil
+    landingAnimation = nil
+    landingSound = nil
+    impactSound = nil
+    ambienceSounds = {}
+    footstepsSound = nil
+    runTrack, idleTrack, landingTrack, lastMoveState = nil, nil, nil, nil
+
     if camera then camera.CameraType = Enum.CameraType.Custom end
+
+    isThirdPerson = false
+
+    lastLandingTime = 0
+    movementEnabled = false
 
     if originalCharacter then
         for _, part in ipairs(originalCharacter:GetDescendants()) do
@@ -385,12 +403,41 @@ local function stopMorph()
         end
     end
 
+    if originalHumanoid then
+        originalHumanoid.WalkSpeed = originalWalkSpeed or 16
+        originalHumanoid.JumpPower = originalJumpPower or 50
+        if originalHumanoid.JumpHeight then
+            originalHumanoid.JumpHeight = originalJumpHeight or 7.2
+        end
+    end
+
+    if originalCharacter then
+        for _, tool in ipairs(originalCharacter:GetChildren()) do
+            if tool:IsA("Tool") then
+                local handle = tool:FindFirstChild("Handle")
+                if handle then
+                    local morphWeld = handle:FindFirstChild("MorphWeld")
+                    if morphWeld then morphWeld:Destroy() end
+                end
+            end
+        end
+    end
+
     if morph then morph:Destroy() morph = nil end
     _G._morphReplayLanding = nil
-end
 
-if _G.morphCleanup then pcall(_G.morphCleanup) end
-_G.morphCleanup = stopMorph
+    originalCharacter = nil
+    originalRootPart = nil
+    originalHumanoid = nil
+    originalHeadPart = nil
+    originalWalkSpeed = nil
+    originalJumpPower = nil
+    originalJumpHeight = nil
+    rootWeld = nil
+    headWeld = nil
+    animationController = nil
+    animator = nil
+end
 
 MainCategory:Button({
     Text = "开始变形",
@@ -407,7 +454,6 @@ MainCategory:Button({
     Icon = "square",
     Tooltip = "还原角色、相机与音效",
     Callback = function()
-        -- 已变形时不再提示"开启变形如果你已开启变形可无视"
         notifyIfNotMorphed("开启变形如果你已开启变形可无视")
         stopMorph()
     end,
@@ -428,7 +474,7 @@ MainCategory:Button({
 CameraCategory:Toggle({
     Title = "第三人称 (电脑按键L)",
     Value = false,
-    FeatureName = "ThirdPerson",
+    FeatureName = "已开启第三人",
     Icon = "camera",
     Tooltip = "切换第一/第三人称视角",
     ConfigKey = "third_person",
