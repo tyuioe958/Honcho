@@ -60,7 +60,7 @@ local Window = WasUIPro:CreateWindow({
     Theme = "Dark",
     RainbowMode = "流动",
     DialogTitle = "确认关闭窗口",
-    GroupText = "加入交流群(ui作者群)",
+    GroupText = "加入交流群ui作者群",
     GroupCopy = "938419587",
     SnowEnabled = true,
     Folder = "HonchoMorph_Config",
@@ -454,7 +454,7 @@ MainCategory:Button({
     Icon = "square",
     Tooltip = "还原角色、相机与音效",
     Callback = function()
-        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        notifyIfNotMorphed("开启变形！！！")
         stopMorph()
     end,
 })
@@ -464,7 +464,7 @@ MainCategory:Button({
     Icon = "arrow-down",
     Tooltip = "播放落地动画与音效",
     Callback = function()
-        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        notifyIfNotMorphed("开启变形！！！")
         if _G._morphReplayLanding then
             _G._morphReplayLanding()
         end
@@ -479,7 +479,7 @@ CameraCategory:Toggle({
     Tooltip = "切换第一/第三人称视角",
     ConfigKey = "third_person",
     Callback = function(state)
-        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        notifyIfNotMorphed("开启变形！！！")
         isThirdPerson = state
     end,
 })
@@ -487,9 +487,9 @@ CameraCategory:Toggle({
 SoundCategory:Button({
     Text = "播放/停止 档案馆Honcho遭遇战音乐1 (电脑按键Z)",
     Icon = "music",
-    Tooltip = "免费音乐🤔(可能需要开启变形)",
+    Tooltip = "免费音乐🤔",
     Callback = function()
-        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        notifyIfNotMorphed("开启变形！！！")
         if not ambienceSounds[1] then return end
         if currentAmbience == ambienceSounds[1] then
             ambienceSounds[1]:Stop()
@@ -505,9 +505,9 @@ SoundCategory:Button({
 SoundCategory:Button({
     Text = "播放/停止 档案馆Honcho遭遇战音乐2 (电脑按键X)",
     Icon = "music",
-    Tooltip = "免费音乐🤔(可能需要开启变形)",
+    Tooltip = "免费音乐🤔",
     Callback = function()
-        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        notifyIfNotMorphed("开启变形！！！")
         if not ambienceSounds[2] then return end
         if currentAmbience == ambienceSounds[2] then
             ambienceSounds[2]:Stop()
@@ -523,9 +523,9 @@ SoundCategory:Button({
 SoundCategory:Button({
     Text = "播放/停止 档案馆Honcho遭遇战音乐3 (电脑按键V)",
     Icon = "music",
-    Tooltip = "免费音乐🤔(可能需要开启变形)",
+    Tooltip = "免费音乐🤔",
     Callback = function()
-        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        notifyIfNotMorphed("开启变形！！！")
         if not ambienceSounds[3] then return end
         if currentAmbience == ambienceSounds[3] then
             ambienceSounds[3]:Stop()
