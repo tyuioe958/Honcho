@@ -47,9 +47,6 @@ local footstepsSound
 local currentAmbience, movementEnabled
 local runTrack, idleTrack, landingTrack, lastMoveState
 
--- 关键：初始化标记，避开 ConfigKey 加载/保存时触发提示
-local uiReady = false
-
 -- 只在未变形时提示的辅助函数
 local function notifyIfNotMorphed(text)
     if not morph then
@@ -410,6 +407,7 @@ MainCategory:Button({
     Icon = "square",
     Tooltip = "还原角色、相机与音效",
     Callback = function()
+        -- 已变形时不再提示"开启变形如果你已开启变形可无视"
         notifyIfNotMorphed("开启变形如果你已开启变形可无视")
         stopMorph()
     end,
@@ -430,15 +428,11 @@ MainCategory:Button({
 CameraCategory:Toggle({
     Title = "第三人称 (电脑按键L)",
     Value = false,
-    FeatureName = "已开启第三人称",
+    FeatureName = "ThirdPerson",
     Icon = "camera",
     Tooltip = "切换第一/第三人称视角",
     ConfigKey = "third_person",
     Callback = function(state)
-        if not uiReady then
-            isThirdPerson = state
-            return
-        end
         notifyIfNotMorphed("开启变形如果你已开启变形可无视")
         isThirdPerson = state
     end,
@@ -449,8 +443,15 @@ SoundCategory:Button({
     Icon = "music",
     Tooltip = "免费音乐🤔(可能需要开启变形)",
     Callback = function()
-if not morph then
-            WasUIPro:Notify({ Title = "提示", Content = "开启变形如果你已开启变形可无视", Duration = 1 })
+        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        if not ambienceSounds[1] then return end
+        if currentAmbience == ambienceSounds[1] then
+            ambienceSounds[1]:Stop()
+            currentAmbience = nil
+        else
+            if currentAmbience then currentAmbience:Stop() end
+            playSound(ambienceSounds[1])
+            currentAmbience = ambienceSounds[1]
         end
     end,
 })
@@ -460,8 +461,15 @@ SoundCategory:Button({
     Icon = "music",
     Tooltip = "免费音乐🤔(可能需要开启变形)",
     Callback = function()
-if not morph then
-            WasUIPro:Notify({ Title = "提示", Content = "开启变形如果你已开启变形可无视", Duration = 1 })
+        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        if not ambienceSounds[2] then return end
+        if currentAmbience == ambienceSounds[2] then
+            ambienceSounds[2]:Stop()
+            currentAmbience = nil
+        else
+            if currentAmbience then currentAmbience:Stop() end
+            playSound(ambienceSounds[2])
+            currentAmbience = ambienceSounds[2]
         end
     end,
 })
@@ -471,15 +479,17 @@ SoundCategory:Button({
     Icon = "music",
     Tooltip = "免费音乐🤔(可能需要开启变形)",
     Callback = function()
-        if not morph then
-            WasUIPro:Notify({ Title = "提示", Content = "开启变形如果你已开启变形可无视", Duration = 1 })
+        notifyIfNotMorphed("开启变形如果你已开启变形可无视")
+        if not ambienceSounds[3] then return end
+        if currentAmbience == ambienceSounds[3] then
+            ambienceSounds[3]:Stop()
+            currentAmbience = nil
+        else
+            if currentAmbience then currentAmbience:Stop() end
+            playSound(ambienceSounds[3])
+            currentAmbience = ambienceSounds[3]
         end
     end,
 })
 
-task.spawn(function()
-    task.wait(1)
-    uiReady = true
-end)
-
-WasUIPro:Notify({ Title = "信用", Content = "由tyuioe958制作_UI库:WasUIPro_插件作者MorthenHubber", Duration = 6 })
+WasUIPro:Notify({ Title = "信用", Content = "由tyuioe958制作，由WasUIPro驱动", Duration = 6 })
